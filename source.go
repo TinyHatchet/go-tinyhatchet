@@ -22,32 +22,54 @@ type Logger struct {
 	HTTPClient   *http.Client
 	LogErrors    bool
 	MouseionHost string
+	DefaultTags  []string
+
+	// AutoTagger is a function called when a log message is written. AutoTagger
+	// parses the arg and determines if any tags should be added to the defaults
+	AutoTagger func(defaultTags []string, arg interface{}) []string
 }
 
 func (logger *Logger) Print(v ...interface{}) {
-	logger.send(fmt.Sprint(v...))
+	logger.send(fmt.Sprint(v...), logger.ArgsToTags(v))
 }
 
 func (logger *Logger) Printf(format string, v ...interface{}) {
-	logger.send(fmt.Sprintf(format, v...))
+	logger.send(fmt.Sprintf(format, v...), logger.ArgsToTags(v))
 }
 
 func (logger *Logger) Println(v ...interface{}) {
 	logger.Print(v...)
 }
 
-func (logger *Logger) send(text string) {
-	err := send(logger.HTTPClient, logger.MouseionHost, text)
+func (logger *Logger) send(text string, tags []string) {
+	err := send(logger.HTTPClient, logger.MouseionHost, text, tags)
 	if err != nil && logger.LogErrors {
 		log.Println(err)
 	}
 }
 
-func send(client *http.Client, host string, text string) error {
+func (logger *Logger) ArgsToTags(args ...interface{}) []string {
+	if logger.AutoTagger == nil {
+		return logger.DefaultTags
+	}
+	tags := []string{}
+	for _, arg := range args {
+		autoTags := logger.AutoTagger(logger.DefaultTags, arg)
+		if len(autoTags) > 0 {
+			tags = append(tags, autoTags...)
+		}
+	}
+	if len(tags) == 0 {
+		tags = nil
+	}
+	return tags
+}
+
+func send(client *http.Client, host string, text string, tags []string) error {
 	if client != nil {
 		client = http.DefaultClient
 	}
-	entry := LogEntry{Timestamp: time.Now(), Text: text, Tags: nil}
+	entry := LogEntry{Timestamp: time.Now(), Text: text, Tags: tags}
 	entryJSON, err := json.Marshal(entry)
 	if err != nil {
 		return err
