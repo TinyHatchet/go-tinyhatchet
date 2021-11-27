@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"testing"
 
-	mouseion "git.codemonkeysoftware.net/mouseion/go_mousion"
+	mouseion "git.codemonkeysoftware.net/mouseion/go-mouseion"
 )
 
 type MockClient struct {
