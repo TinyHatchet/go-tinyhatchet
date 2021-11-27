@@ -19,10 +19,11 @@ type LogEntry struct {
 // Logger sends log messages to MouseionHost using HTTPClient. MouseionHost
 // is the only required field.
 type Logger struct {
-	HTTPClient   *http.Client
-	LogErrors    bool
-	MouseionHost string
-	DefaultTags  []string
+	HTTPClient          *http.Client
+	LogErrors           bool
+	MouseionHost        string
+	APIToken, APISecret string
+	DefaultTags         []string
 
 	// AutoTagger is a function called when a log message is written. AutoTagger
 	// parses the arg and determines if any tags should be added to the defaults
@@ -42,7 +43,7 @@ func (logger *Logger) Println(v ...interface{}) {
 }
 
 func (logger *Logger) send(text string, tags []string) {
-	err := send(logger.HTTPClient, logger.MouseionHost, text, tags)
+	err := send(logger.HTTPClient, logger.MouseionHost, logger.APIToken, logger.APISecret, text, tags)
 	if err != nil && logger.LogErrors {
 		log.Println(err)
 	}
@@ -65,7 +66,7 @@ func (logger *Logger) ArgsToTags(args ...interface{}) []string {
 	return tags
 }
 
-func send(client *http.Client, host string, text string, tags []string) error {
+func send(client *http.Client, host, username, password, text string, tags []string) error {
 	if client != nil {
 		client = http.DefaultClient
 	}
@@ -74,7 +75,13 @@ func send(client *http.Client, host string, text string, tags []string) error {
 	if err != nil {
 		return err
 	}
-	resp, err := client.Post(jsonURL(host), "application/json", bytes.NewBuffer(entryJSON))
+	req, err := http.NewRequest(http.MethodPost, jsonURL(host), bytes.NewBuffer(entryJSON))
+	if err != nil {
+		return err
+	}
+	req.Header.Set("Content-Type", "application/json")
+	req.SetBasicAuth(username, password)
+	resp, err := client.Do(req)
 	if err != nil {
 		return err
 	}
