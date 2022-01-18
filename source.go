@@ -85,6 +85,7 @@ func send(client *http.Client, host, username, password, text string, tags []str
 	if err != nil {
 		return err
 	}
+	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusOK {
 		body, _ := ioutil.ReadAll(resp.Body)
 		return fmt.Errorf("%d %s", resp.StatusCode, body)

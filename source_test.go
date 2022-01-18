@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"testing"
 
-	mouseion "git.codemonkeysoftware.net/mouseion/go-mouseion"
+	tinyhatchet "github.com/tinyhatchet/go-tinyhatchet"
 )
 
 type MockClient struct {
@@ -17,7 +17,7 @@ func (m *MockClient) Post(url string, contentType string, body io.Reader) (*http
 }
 
 func TestArgsToTags(t *testing.T) {
-	logger := mouseion.Logger{
+	logger := tinyhatchet.Logger{
 		LogErrors:   false,
 		DefaultTags: []string{"default tag"},
 		AutoTagger: func(defaultTags []string, arg interface{}) []string {

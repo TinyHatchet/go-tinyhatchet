@@ -1,3 +1,3 @@
-module git.codemonkeysoftware.net/mouseion/go-mouseion
+module github.com/tinyhatchet/go-tinyhatchet
 
 go 1.17
