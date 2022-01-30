@@ -67,7 +67,7 @@ func (logger *Logger) ArgsToTags(args ...interface{}) []string {
 }
 
 func send(client *http.Client, host, username, password, text string, tags []string) error {
-	if client != nil {
+	if client == nil {
 		client = http.DefaultClient
 	}
 	entry := LogEntry{Timestamp: time.Now(), Text: text, Tags: tags}
